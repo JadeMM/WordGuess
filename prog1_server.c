@@ -1,5 +1,3 @@
-/* demo_server.c - code for example server program that uses TCP */
-
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,23 +8,6 @@
 #include <unistd.h>
 
 #define QLEN 6 /* size of request queue */
-int visits = 0; /* counts client connections */
-
-/*------------------------------------------------------------------------
-* Program: demo_server
-*
-* Purpose: allocate a socket and then repeatedly execute the following:
-* (1) wait for the next connection from a client
-* (2) send a short message to the client
-* (3) close the connection
-* (4) go back to step (1)
-*
-* Syntax: ./demo_server port
-*
-* port - protocol port number to use
-*
-*------------------------------------------------------------------------
-*/
 
 int main(int argc, char **argv) {
 	struct protoent *ptrp; /* pointer to a protocol table entry */
@@ -36,14 +17,6 @@ int main(int argc, char **argv) {
 	int port; /* protocol port number */
 	int alen; /* length of address */
 	int optval = 1; /* boolean value when we set socket option */
-	char buf[1000]; /* buffer for string the server sends */
-
-	if( argc != 2 ) {
-		fprintf(stderr,"Error: Wrong number of arguments\n");
-		fprintf(stderr,"usage:\n");
-		fprintf(stderr,"./server server_port\n");
-		exit(EXIT_FAILURE);
-	}
 
 	memset((char *)&sad,0,sizeof(sad)); /* clear sockaddr structure */
 
@@ -52,15 +25,6 @@ int main(int argc, char **argv) {
 	
 	//TODO: Set local IP address to listen to all IP addresses this server can assume. You can do it by using INADDR_ANY
 	sad.sin_addr.s_addr = INADDR_ANY;
-     
-	port = atoi(argv[1]); /* convert argument to binary */
-	if (port > 0) { /* test for illegal value */
-		//TODO: set port number. The data type is u_short
-		sad.sin_port = htons(port);
-	} else { /* print error message and exit */
-		fprintf(stderr,"Error: Bad port number %s\n",argv[1]);
-		exit(EXIT_FAILURE);
-	}
 
 	/* Map TCP transport protocol name to protocol number */
 	if ( ((long int)(ptrp = getprotobyname("tcp"))) == 0) {
@@ -88,7 +52,7 @@ int main(int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	/* TODO: Specify size of request queue. Listen take 2 parameters -- socket descriptor and QLEN, which has been set at the top of this code. */
+	/* TODO: Specify size of request queue.*/
 	if (listen(sd, QLEN) < 0) {
 		fprintf(stderr,"Error: Listen failed\n");
 		exit(EXIT_FAILURE);
@@ -101,10 +65,60 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "Error: Accept failed\n");
 			exit(EXIT_FAILURE);
 		}
-		visits++;
-		sprintf(buf,"This server has been contacted %d time%s\n",visits,visits==1?".":"s.");
+
+		if(int childDesc = fork() == 0) {
+			playGame(sd2);
+		}
+
+		/*sprintf(buf,"This server has been contacted %d time%s\n",visits,visits==1?".":"s.");
 		send(sd2, buf, strlen(buf),0);
-		close(sd2);
+		close(sd2);*/
 	}
 }
+
+	void playGame(int sd2) {
+		char buf[1000]; /* buffer for string the server sends */
+		char letterBuf[1]; /* buffer for users guess */
+		char* word = "banana";
+		int wordLen = strlen(word);
+		unsig8_t guessRem = 6;
+		char* cWord = "______";
+		boolean gameOver = false;
+
+		while(!gameOver) {
+			sprintf(buf,"Board: %s (%d guesses left)\n",cWord, wordLen)
+			send(sd2, buf, strlen(buf),0);
+			
+			recv(sd, letterBuf, 1, MSG_WAITALL);
+			checkWord(&cWord, &word, letterBuf, &guessRem);
+		}
+	}
+
+	checkWord(char *cWord, char *word, char letterBuf, unsig8_t *guessRem) {
+		boolean correctGuess = false;
+		int inc = 0;
+		while(cWord[inc]) {
+			if( word[inc] == letterBuf) {
+				cWord[inc] = letterBuf;
+				correctGuess = true;
+			}
+			inc++:
+		}
+		
+		if(!correctGuess) {
+			*guessRem--;
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
 
