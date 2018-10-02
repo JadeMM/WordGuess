@@ -1,0 +1,27 @@
+    The server creates a socket and binds it to a port. It then calls listen so 
+that the client can connect to the port. In a loop, we call accept to connect 
+the client. We then fork so that we can handle multiple requests to the server. 
+The client will in turn create a socket and call connect to communicate with the 
+server. This will allow us to begin playing LexiGuess. The server will write the 
+unguessed word and the number of remaining guesses each time the client guesses a
+letter. The client will display this information for the user. The user then 
+guesses a letter and the client will write their guessed letter for the server 
+to read. This continues until the word is guessed, the user is out of guesses, 
+or a connection is lost.
+
+    In our implmentation, we will have the server maintain the following: 
+the remaining guesses, the unknown word, and a string with the users guessed 
+letters filled in. The client will keep track of the letters guessed so they 
+don't guess the same letter.
+ 
+    The biggest challenge we anticipate is connecting the client to the server. 
+Also, communicating between the client and server while insuring the integrity
+of the data may give us some trouble.
+ 
+    Three sources we plan to use are linux manual pages, classroom slides, 
+classmates and office hours.
+ 
+ Meeting hours: Tuesday: 10 - 12
+                Friday:   1 - 3
+                More time if needed 
+                
