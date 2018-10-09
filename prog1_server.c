@@ -93,6 +93,7 @@ int main(int argc, char **argv) {
 		uint8_t unguessedLet = 6;
 		char *cWord = "______";
 		int gameOver = 0;
+		int usedLetters[26] = {0};
 
 		while(!gameOver) {
 			//Send number of guesses remaining to client
@@ -101,15 +102,20 @@ int main(int argc, char **argv) {
 			sprintf(buf,"%s",cWord);
 			send(sd2, buf, strlen(buf),0);
 			recv(sd2, letterBuf, 1, MSG_WAITALL);
-			//printf("Board: %s (%u guesses left)\nEnter guess: ", cWord, guessBuf[0]);
-			cWord = checkWord(cWord, word, letterBuf, guessBuf, &unguessedLet);
+
+			//checks if letter has already been guessed
+			if(usedLetters[letterBuf[0]-97] == 0) {
+				usedLetters[letterBuf[0]-97] = 1;
+				cWord = checkWord(cWord, word, letterBuf, guessBuf, &unguessedLet);
+			}
+
 			if(guessBuf[0] == 0 || unguessedLet == 0){
 				gameOver = 1;
 			}
 		}
 		if(guessBuf[0] != 0){
 			// Set guessBuff to 255 to signify win
-			guessBuf[255];
+			guessBuf[0] = 255;
 		}
 		send(sd2, guessBuf, 1, 0);
 		// Send board one last time
