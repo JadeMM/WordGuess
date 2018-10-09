@@ -6,7 +6,7 @@
 #define EMPTY NULL
 
 void playGame(int sd2);
-void checkWord(char *cWord, char *word, char *letterBuf, uint8_t *guessRem,
+char* checkWord(char *cWord, char *word, char *letterBuf, uint8_t *guessRem,
 		uint8_t *unguessedLet);
 
 #endif
