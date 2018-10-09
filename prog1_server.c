@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 #include "prog1_server.h"
 
 #define QLEN 6 /* size of request queue */
@@ -77,6 +78,8 @@ int main(int argc, char **argv) {
 		int childDesc = fork();
 		if(childDesc == 0) {
 			playGame(sd2);
+			close(sd2);
+			return 0;
 		}
 		/*sprintf(buf,"This server has been contacted %d time%s\n",visits,visits==1?".":"s.");
 		send(sd2, buf, strlen(buf),0);*/
@@ -101,12 +104,18 @@ int main(int argc, char **argv) {
 			// Send unguessed string to client
 			sprintf(buf,"%s",cWord);
 			send(sd2, buf, strlen(buf),0);
-			recv(sd2, letterBuf, 1, MSG_WAITALL);
+			int n = recv(sd2, letterBuf, 1, 0);
+			printf("Got %d bytes\n", n);
+			if(n == 0) {
+				return;
+			}
 
 			//checks if letter has already been guessed
 			if(usedLetters[letterBuf[0]-97] == 0) {
 				usedLetters[letterBuf[0]-97] = 1;
 				cWord = checkWord(cWord, word, letterBuf, guessBuf, &unguessedLet);
+			} else {
+				guessBuf[0]--;
 			}
 
 			if(guessBuf[0] == 0 || unguessedLet == 0){
