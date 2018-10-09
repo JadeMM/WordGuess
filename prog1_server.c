@@ -66,8 +66,7 @@ int main(int argc, char **argv) {
 		fprintf(stderr,"Error: Listen failed\n");
 		exit(EXIT_FAILURE);
 	}
-	playGame(sd);
-	exit(0);
+
 	/* Main server loop - accept and handle requests */
 	while (1) {
 		alen = sizeof(cad);
@@ -79,7 +78,6 @@ int main(int argc, char **argv) {
 		if(childDesc == 0) {
 			playGame(sd2);
 		}
-		printf("here\n");
 		/*sprintf(buf,"This server has been contacted %d time%s\n",visits,visits==1?".":"s.");
 		send(sd2, buf, strlen(buf),0);*/
 		close(sd2);
@@ -90,61 +88,56 @@ int main(int argc, char **argv) {
 		char buf[1000]; /* buffer for string the server sends */
 		uint8_t guessBuf[] = {6}; /* buffer for remaining guesses */
 		char letterBuf[1]; /* buffer for users guess */
-		char* word = "aanana";
+		char* word = "banana";
 		int wordLen = strlen(word);
 		uint8_t unguessedLet = 6;
-		char cWord[] = "______";
+		char *cWord = "______";
 		int gameOver = 0;
 
 		while(!gameOver) {
 			//Send number of guesses remaining to client
-			//send(sd2, guessBuf, 1, 0);
+			send(sd2, guessBuf, 1, 0);
 			// Send unguessed string to client
-			//sprintf(buf,"%s",cWord);
-			//send(sd2, buf, strlen(buf),0);
-			//int n = recv(sd2, letterBuf, 1, MSG_WAITALL);
-			printf("Board: %s (%u guesses left)\nEnter guess: ", cWord, guessBuf[0]);
-			scanf("%s", letterBuf);
-			checkWord(cWord, word, letterBuf, guessBuf, &unguessedLet);
-			printf("cword: %s", cWord);
+			sprintf(buf,"%s",cWord);
+			send(sd2, buf, strlen(buf),0);
+			recv(sd2, letterBuf, 1, MSG_WAITALL);
+			//printf("Board: %s (%u guesses left)\nEnter guess: ", cWord, guessBuf[0]);
+			cWord = checkWord(cWord, word, letterBuf, guessBuf, &unguessedLet);
 			if(guessBuf[0] == 0 || unguessedLet == 0){
 				gameOver = 1;
-				printf("Game over");
 			}
 		}
 		if(guessBuf[0] != 0){
 			// Set guessBuff to 255 to signify win
 			guessBuf[255];
 		}
-		//send(sd2, guessBuf, 1, 0);
+		send(sd2, guessBuf, 1, 0);
 		// Send board one last time
-		//sprintf(buf,"%s \n",cWord);
-		//send(sd2, buf, strlen(buf),0);
+		sprintf(buf,"%s \n",cWord);
+		send(sd2, buf, strlen(buf),0);
 	}
 
-	void checkWord(char cWord[], char *word, char *letterBuf, uint8_t *guessRem,
+	// Find all occurances of guessed letter in cWord and return new cWord
+	char* checkWord(char *cWord, char *word, char *letterBuf, uint8_t *guessRem,
 		 	uint8_t *unguessedLet) {
 
+		// Create new ptr and copy address to manipulate word
+		char *newCWord = strdup(cWord);
+		cWord = newCWord;
 		int correctGuess = 0;
 		int size = strlen(word);
-		printf("%lu",strlen(cWord));
-		printf("%s\n", cWord);
 		// Replace "_" in cWord where letter is correct
 		for(int i = 0; i < size; i++){
-			// printf("%d", i);
-			// printf("%s", letterBuf);
-			// printf("%c", cWord[i]);
-			// printf("%c", letterBuf[i]);
 			if(word[i] == letterBuf[0]) {
-				cWord[i] = letterBuf[0];
-				printf("%s\n", cWord);
-		 		(*unguessedLet)--;
-		//		printf("%u", *unguessedLet);
-		 		correctGuess = 1;
+				*newCWord = letterBuf[0];
+				(*unguessedLet)--;
+				correctGuess = 1;
 			}
+			newCWord++;
 		}
-		printf("%s\n", cWord);
+
 		if(!correctGuess) {
 			(*guessRem)--;
 		}
+		return cWord;
 	}
