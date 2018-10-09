@@ -71,16 +71,19 @@ int main( int argc, char **argv) {
 	char guess[1];
 	recv(sd, guessesRem, 1, MSG_WAITALL);
 	int lengthWord = guessesRem[0];
-	while (guessesRem[0] > 0) {
+	while (guessesRem[0] != 0 && guessesRem[0] != 255) {
 		recv(sd, buf, lengthWord, MSG_WAITALL);
 		printf("Board: %s (%u guesses left)\nEnter guess: ", buf, guessesRem[0]);
-		scanf("%c", guess);
-		printf("%c\n", guess[0]);
+		scanf("%s", guess);
 		send(sd, guess, 1, 0);
 		recv(sd, guessesRem, 1, MSG_WAITALL);
-
+		printf("\n");
 	}
-
+	if(guessesRem[0] == 0){
+		printf("Loser\n")
+	}else{
+		printf("winner\n");
+	}
 	close(sd);
 
 	exit(EXIT_SUCCESS);
