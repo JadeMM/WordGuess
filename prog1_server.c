@@ -66,7 +66,8 @@ int main(int argc, char **argv) {
 		fprintf(stderr,"Error: Listen failed\n");
 		exit(EXIT_FAILURE);
 	}
-
+	playGame(sd);
+	exit(0);
 	/* Main server loop - accept and handle requests */
 	while (1) {
 		alen = sizeof(cad);
@@ -78,10 +79,10 @@ int main(int argc, char **argv) {
 		if(childDesc == 0) {
 			playGame(sd2);
 		}
-
+		printf("here\n");
 		/*sprintf(buf,"This server has been contacted %d time%s\n",visits,visits==1?".":"s.");
 		send(sd2, buf, strlen(buf),0);*/
-		//close(sd2);
+		close(sd2);
 	}
 }
 
@@ -89,71 +90,61 @@ int main(int argc, char **argv) {
 		char buf[1000]; /* buffer for string the server sends */
 		uint8_t guessBuf[] = {6}; /* buffer for remaining guesses */
 		char letterBuf[1]; /* buffer for users guess */
-		char* word = "banana";
+		char* word = "aanana";
 		int wordLen = strlen(word);
 		uint8_t unguessedLet = 6;
-		char* cWord = "______";
+		char cWord[] = "______";
 		int gameOver = 0;
 
 		while(!gameOver) {
-			printf("enter game loop\n");
-			write(1, cWord, 6);
 			//Send number of guesses remaining to client
-			send(sd2, guessBuf, 1, 0);
+			//send(sd2, guessBuf, 1, 0);
 			// Send unguessed string to client
-			sprintf(buf,"%s",cWord);
-			printf("buf size: %lu\n", strlen(buf));
-			printf("buf: %s\n", buf);
-			send(sd2, buf, strlen(buf),0);
-
-			printf("Letter Buf: %s\n", letterBuf);
-
-			int n = recv(sd2, letterBuf, 1, MSG_WAITALL);
-			printf("bytes rec: %d\n", n);
-			printf("Guessed letter: %s\n", letterBuf);
-			printf("Guesses remaining: %u\n", guessBuf[0]);
-			printf("Unguessed Letters: %u\n", unguessedLet);
-			printf("Unguessed word: %s\n", cWord);
+			//sprintf(buf,"%s",cWord);
+			//send(sd2, buf, strlen(buf),0);
+			//int n = recv(sd2, letterBuf, 1, MSG_WAITALL);
+			printf("Board: %s (%u guesses left)\nEnter guess: ", cWord, guessBuf[0]);
+			scanf("%s", letterBuf);
 			checkWord(cWord, word, letterBuf, guessBuf, &unguessedLet);
-
-			printf("2Guesses remaining: %u\n", guessBuf[0]);
-			printf("2Unguessed Letters: %u\n", unguessedLet);
-			printf("2Unguessed word: %s\n", cWord);
-
-
+			printf("cword: %s", cWord);
 			if(guessBuf[0] == 0 || unguessedLet == 0){
 				gameOver = 1;
+				printf("Game over");
 			}
 		}
 		if(guessBuf[0] != 0){
 			// Set guessBuff to 255 to signify win
 			guessBuf[255];
 		}
-		send(sd2, guessBuf, 1, 0);
+		//send(sd2, guessBuf, 1, 0);
 		// Send board one last time
-		sprintf(buf,"%s \n",cWord);
-		send(sd2, buf, strlen(buf),0);
+		//sprintf(buf,"%s \n",cWord);
+		//send(sd2, buf, strlen(buf),0);
 	}
 
-	void checkWord(char *cWord, char *word, char *letterBuf, uint8_t *guessRem,
+	void checkWord(char cWord[], char *word, char *letterBuf, uint8_t *guessRem,
 		 	uint8_t *unguessedLet) {
 
 		int correctGuess = 0;
-		int inc = 0;
-		write(1, "here\n", 4);
 		int size = strlen(word);
+		printf("%lu",strlen(cWord));
+		printf("%s\n", cWord);
 		// Replace "_" in cWord where letter is correct
 		for(int i = 0; i < size; i++){
-			if( word[i] == letterBuf[0]) {
-				write(1, cWord, 6);
+			// printf("%d", i);
+			// printf("%s", letterBuf);
+			// printf("%c", cWord[i]);
+			// printf("%c", letterBuf[i]);
+			if(word[i] == letterBuf[0]) {
 				cWord[i] = letterBuf[0];
-				(*unguessedLet)--;
-				correctGuess = 1;
+				printf("%s\n", cWord);
+		 		(*unguessedLet)--;
+		//		printf("%u", *unguessedLet);
+		 		correctGuess = 1;
 			}
-			write(1, letterBuf, 1);
 		}
-
+		printf("%s\n", cWord);
 		if(!correctGuess) {
-			*guessRem--;
+			(*guessRem)--;
 		}
 	}
