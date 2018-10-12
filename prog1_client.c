@@ -86,7 +86,7 @@ int main( int argc, char **argv) {
 	printf("Board: %s\n", buf);
 
 	if(guessesRem[0] == 0){
-		printf("You lose\n");
+		printf("You lost\n");
 	}else{
 		printf("You win\n");
 	}
