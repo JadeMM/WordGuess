@@ -63,6 +63,7 @@ void playGame(int sd2, char **argv) {
 		send(sd2, buf, strlen(buf),0);
 		int n = recv(sd2, letterBuf, 1, 0);
 		if(n == 0) {
+		    free(newCWord);
 			return;
 		}
 
