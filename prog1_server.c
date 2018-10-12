@@ -15,20 +15,20 @@ char* checkWord(char *cWord, char *word, char letterBuf, uint8_t *guessRem,
 		uint8_t *unguessedLet) {
 
 	// Create new ptr and copy address to manipulate word
-	char *newCWord = strdup(cWord);
-	cWord = newCWord;
+	char *nCWord = strdup(cWord);
+	cWord = nCWord;
 	int correctGuess = 0;
 	int size = strlen(word);
 	// Replace "_" in cWord where letter is correct
 	for(int i = 0; i < size; i++){
 		if(word[i] == letterBuf) {
-			*newCWord = letterBuf;
+			*nCWord = letterBuf;
 			(*unguessedLet)--;
 			correctGuess = 1;
 		}
-		newCWord++;
+		nCWord++;
 	}
-	*newCWord = '\0';
+	*nCWord = '\0';
 
 	if(!correctGuess) {
 		(*guessRem)--;
