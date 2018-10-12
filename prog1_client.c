@@ -1,8 +1,7 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -29,9 +28,9 @@ int main( int argc, char **argv) {
 	}
 
 	port = atoi(argv[2]); /* convert to binary */
-	if (port > 0) /* test for legal value */
+	if (port > 0) { /* test for legal value */
 		sad.sin_port = htons((u_short)port);
-	else {
+	} else {
 		fprintf(stderr,"Error: bad port number %s\n",argv[2]);
 		exit(EXIT_FAILURE);
 	}
@@ -60,7 +59,7 @@ int main( int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	/* TODO: Connect the socket to the specified server. You have to pass correct parameters to the connect function.*/
+	/* Connect the socket to the specified server. You have to pass correct parameters to the connect function.*/
 	if (connect(sd, (struct sockaddr*) &sad, sizeof(sad)) < 0) {
 		fprintf(stderr,"connect failed\n");
 		exit(EXIT_FAILURE);
