@@ -68,6 +68,12 @@ int main(int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
+	//checks if there are enough arguments
+	if(argc != 3) {
+		fprintf(stderr,"Error: Wrong number of arguments\n");
+		exit(EXIT_FAILURE);
+	}
+
 	/* Main server loop - accept and handle requests */
 	while (1) {
 		alen = sizeof(cad);
@@ -77,7 +83,7 @@ int main(int argc, char **argv) {
 		}
 		int childDesc = fork();
 		if(childDesc == 0) {
-			playGame(sd2);
+			playGame(sd2, argv);
 			close(sd2);
 			return 0;
 		}
@@ -87,14 +93,22 @@ int main(int argc, char **argv) {
 	}
 }
 
-	void playGame(int sd2) {
+	void playGame(int sd2, char **argv) {
 		char buf[1000]; /* buffer for string the server sends */
-		uint8_t guessBuf[] = {6}; /* buffer for remaining guesses */
 		char letterBuf[1]; /* buffer for users guess */
-		char* word = "banana";
+		char* word = argv[2];
 		int wordLen = strlen(word);
-		uint8_t unguessedLet = 6;
-		char *cWord = "______";
+		uint8_t unguessedLet = wordLen;
+		uint8_t guessBuf[] = {wordLen}; /* buffer for remaining guesses */
+
+		char cWord[wordLen+1];
+		for(int i = 0; i<wordLen; i++) {
+			cWord[i] = '_';
+		}
+		//cWord[wordLen] = '\0';
+
+		char* newCWord = strdup(cWord);
+
 		int gameOver = 0;
 		int usedLetters[26] = {0};
 
@@ -102,18 +116,22 @@ int main(int argc, char **argv) {
 			//Send number of guesses remaining to client
 			send(sd2, guessBuf, 1, 0);
 			// Send unguessed string to client
-			sprintf(buf,"%s",cWord);
+			sprintf(buf,"%s",newCWord);
 			send(sd2, buf, strlen(buf),0);
 			int n = recv(sd2, letterBuf, 1, 0);
-			printf("Got %d bytes\n", n);
 			if(n == 0) {
 				return;
 			}
 
-			//checks if letter has already been guessed
-			if(usedLetters[letterBuf[0]-97] == 0) {
-				usedLetters[letterBuf[0]-97] = 1;
-				cWord = checkWord(cWord, word, letterBuf, guessBuf, &unguessedLet);
+			//checks if users guess is a valid letter
+			if(letterBuf[0] >= 97 && letterBuf[0] <= 123) {
+				//checks if letter has already been guessed
+				if(usedLetters[letterBuf[0]-97] == 0) {
+					usedLetters[letterBuf[0]-97] = 1;
+					newCWord = checkWord(newCWord, word, letterBuf, guessBuf, &unguessedLet);
+				} else {
+					guessBuf[0]--;
+				}
 			} else {
 				guessBuf[0]--;
 			}
@@ -128,7 +146,7 @@ int main(int argc, char **argv) {
 		}
 		send(sd2, guessBuf, 1, 0);
 		// Send board one last time
-		sprintf(buf,"%s \n",cWord);
+		sprintf(buf,"%s \n",newCWord);
 		send(sd2, buf, strlen(buf),0);
 	}
 
