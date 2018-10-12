@@ -3,8 +3,8 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <signal.h>
 #include "prog1_server.h"
@@ -20,18 +20,25 @@ int main(int argc, char **argv) {
 	int alen; /* length of address */
 	int optval = 1; /* boolean value when we set socket option */
 
+	if( argc != 3 ) {
+		fprintf(stderr,"Error: Wrong number of arguments\n");
+		fprintf(stderr,"usage:\n");
+		fprintf(stderr,"./server server_port\n");
+		exit(EXIT_FAILURE);
+	}
+
 	memset((char *)&sad,0,sizeof(sad)); /* clear sockaddr structure */
 
-	//TODO: Set socket family to AF_INET
+	//Set socket family to AF_INET
 	sad.sin_family = AF_INET;
 
-	//TODO: Set local IP address to listen to all IP addresses this server can assume. You can do it by using INADDR_ANY
+	//Set local IP address to listen to all IP addresses this server can assume. You can do it by using INADDR_ANY
 	sad.sin_addr.s_addr = INADDR_ANY;
 
 	port = atoi(argv[1]);
-	if (port > 0) /* test for legal value */
+	if (port > 0) { /* test for legal value */
 		sad.sin_port = htons((u_short)port);
-	else {
+	} else {
 		fprintf(stderr,"Error: bad port number %s\n",argv[1]);
 		exit(EXIT_FAILURE);
 	}
@@ -42,8 +49,7 @@ int main(int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	/* TODO: Create a socket with AF_INET as domain, protocol type as SOCK_STREAM, and protocol as ptrp->p_proto. This call returns a socket descriptor named sd. */
-
+	/* Create a socket with AF_INET as domain, protocol type as SOCK_STREAM, and protocol as ptrp->p_proto. This call returns a socket descriptor named sd. */
 	sd = socket(AF_INET, SOCK_STREAM, ptrp->p_proto);
 	if (sd < 0) {
 		fprintf(stderr, "Error: Socket creation failed\n");
@@ -56,21 +62,15 @@ int main(int argc, char **argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	/* TODO: Bind a local address to the socket. For this, you need to pass correct parameters to the bind function. */
+	/*  Bind a local address to the socket. For this, you need to pass correct parameters to the bind function. */
 	if (bind(sd, (struct sockaddr*) &sad, sizeof(sad)) < 0) {
 		fprintf(stderr,"Error: Bind failed\n");
 		exit(EXIT_FAILURE);
 	}
 
-	/* TODO: Specify size of request queue.*/
+	/* Specify size of request queue.*/
 	if (listen(sd, QLEN) < 0) {
 		fprintf(stderr,"Error: Listen failed\n");
-		exit(EXIT_FAILURE);
-	}
-
-	//checks if there are enough arguments
-	if(argc != 3) {
-		fprintf(stderr,"Error: Wrong number of arguments\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -87,8 +87,6 @@ int main(int argc, char **argv) {
 			close(sd2);
 			return 0;
 		}
-		/*sprintf(buf,"This server has been contacted %d time%s\n",visits,visits==1?".":"s.");
-		send(sd2, buf, strlen(buf),0);*/
 		close(sd2);
 	}
 }
@@ -105,7 +103,7 @@ int main(int argc, char **argv) {
 		for(int i = 0; i<wordLen; i++) {
 			cWord[i] = '_';
 		}
-		//cWord[wordLen] = '\0';
+		cWord[wordLen] = '\0';
 
 		char* newCWord = strdup(cWord);
 
@@ -148,6 +146,7 @@ int main(int argc, char **argv) {
 		// Send board one last time
 		sprintf(buf,"%s \n",newCWord);
 		send(sd2, buf, strlen(buf),0);
+		free(newCWord);
 	}
 
 	// Find all occurances of guessed letter in cWord and return new cWord
