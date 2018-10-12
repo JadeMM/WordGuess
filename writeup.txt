@@ -1,0 +1,5 @@
+1. Jade Moksness and Sean Barret
+2. 
+3. We tried putting in all the improper input we could think of that would break 
+the program. First running the program without the client, then running it with 
+the interaction between the server and client.
