@@ -1,13 +1,12 @@
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
-#include <signal.h>
-
 
 #define QLEN 6 /* size of request queue */
 
@@ -29,6 +28,7 @@ char* checkWord(char *cWord, char *word, char letterBuf, uint8_t *guessRem,
 		}
 		newCWord++;
 	}
+	*newCWord = '\0';
 
 	if(!correctGuess) {
 		(*guessRem)--;
@@ -63,7 +63,7 @@ void playGame(int sd2, char **argv) {
 		send(sd2, buf, strlen(buf),0);
 		int n = recv(sd2, letterBuf, 1, 0);
 		if(n == 0) {
-		    free(newCWord);
+			free(newCWord);
 			return;
 		}
 
@@ -99,7 +99,8 @@ int main(int argc, char **argv) {
 	struct protoent *ptrp; /* pointer to a protocol table entry */
 	struct sockaddr_in sad; /* structure to hold server's address */
 	struct sockaddr_in cad; /* structure to hold client's address */
-	int sd, sd2; /* socket descriptors */
+	int sd; /* socket descriptors */
+	int sd2;
 	int port; /* protocol port number */
 	int alen; /* length of address */
 	int optval = 1; /* boolean value when we set socket option */
@@ -161,7 +162,7 @@ int main(int argc, char **argv) {
 	/* Main server loop - accept and handle requests */
 	while (1) {
 		alen = sizeof(cad);
-		if ((sd2 = accept(sd, (struct sockaddr *)&cad, &alen)) < 0) {
+		if ((sd2 = accept(sd, (struct sockaddr *)&cad, (socklen_t *)&alen)) < 0) {
 			fprintf(stderr, "Error: Accept failed\n");
 			exit(EXIT_FAILURE);
 		}
