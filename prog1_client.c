@@ -16,7 +16,7 @@ int main( int argc, char **argv) {
 	int sd; /* socket descriptor */
 	int port; /* protocol port number */
 	char *host; /* pointer to host name */
-	char buf[1000]; /* buffer for data from the server */
+	char buf[1000] = {0}; /* buffer for data from the server */
 
 	memset((char *)&sad,0,sizeof(sad)); /* clear sockaddr structure */
 	sad.sin_family = AF_INET; /* set family to Internet */
