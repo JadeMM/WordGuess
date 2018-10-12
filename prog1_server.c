@@ -7,9 +7,92 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
-#include "prog1_server.h"
+
 
 #define QLEN 6 /* size of request queue */
+
+// Find all occurances of guessed letter in cWord and return new cWord
+char* checkWord(char *cWord, char *word, char letterBuf, uint8_t *guessRem,
+		uint8_t *unguessedLet) {
+
+	// Create new ptr and copy address to manipulate word
+	char *newCWord = strdup(cWord);
+	cWord = newCWord;
+	int correctGuess = 0;
+	int size = strlen(word);
+	// Replace "_" in cWord where letter is correct
+	for(int i = 0; i < size; i++){
+		if(word[i] == letterBuf) {
+			*newCWord = letterBuf;
+			(*unguessedLet)--;
+			correctGuess = 1;
+		}
+		newCWord++;
+	}
+
+	if(!correctGuess) {
+		(*guessRem)--;
+	}
+	return cWord;
+}
+
+void playGame(int sd2, char **argv) {
+	char buf[1000]; /* buffer for string the server sends */
+	char letterBuf[1]; /* buffer for users guess */
+	char* word = argv[2];
+	int wordLen = strlen(word);
+	uint8_t unguessedLet = wordLen;
+	uint8_t guessBuf[] = {wordLen}; /* buffer for remaining guesses */
+
+	char cWord[wordLen+1];
+	for(int i = 0; i<wordLen; i++) {
+		cWord[i] = '_';
+	}
+	cWord[wordLen] = '\0';
+
+	char* newCWord = strdup(cWord);
+
+	int gameOver = 0;
+	int usedLetters[26] = {0};
+
+	while(!gameOver) {
+		//Send number of guesses remaining to client
+		send(sd2, guessBuf, 1, 0);
+		// Send unguessed string to client
+		sprintf(buf,"%s",newCWord);
+		send(sd2, buf, strlen(buf),0);
+		int n = recv(sd2, letterBuf, 1, 0);
+		if(n == 0) {
+			return;
+		}
+
+		//checks if users guess is a valid letter
+		if(letterBuf[0] >= 97 && letterBuf[0] <= 123) {
+			//checks if letter has already been guessed
+			if(usedLetters[letterBuf[0]-97] == 0) {
+				usedLetters[letterBuf[0]-97] = 1;
+				newCWord = checkWord(newCWord, word, letterBuf[0], guessBuf, &unguessedLet);
+			} else {
+				guessBuf[0]--;
+			}
+		} else {
+			guessBuf[0]--;
+		}
+
+		if(guessBuf[0] == 0 || unguessedLet == 0){
+			gameOver = 1;
+		}
+	}
+	if(guessBuf[0] != 0){
+		// Set guessBuff to 255 to signify win
+		guessBuf[0] = 255;
+	}
+	send(sd2, guessBuf, 1, 0);
+	// Send board one last time
+	sprintf(buf,"%s \n",newCWord);
+	send(sd2, buf, strlen(buf),0);
+	free(newCWord);
+}
 
 int main(int argc, char **argv) {
 	struct protoent *ptrp; /* pointer to a protocol table entry */
@@ -90,86 +173,3 @@ int main(int argc, char **argv) {
 		close(sd2);
 	}
 }
-
-	void playGame(int sd2, char **argv) {
-		char buf[1000]; /* buffer for string the server sends */
-		char letterBuf[1]; /* buffer for users guess */
-		char* word = argv[2];
-		int wordLen = strlen(word);
-		uint8_t unguessedLet = wordLen;
-		uint8_t guessBuf[] = {wordLen}; /* buffer for remaining guesses */
-
-		char cWord[wordLen+1];
-		for(int i = 0; i<wordLen; i++) {
-			cWord[i] = '_';
-		}
-		cWord[wordLen] = '\0';
-
-		char* newCWord = strdup(cWord);
-
-		int gameOver = 0;
-		int usedLetters[26] = {0};
-
-		while(!gameOver) {
-			//Send number of guesses remaining to client
-			send(sd2, guessBuf, 1, 0);
-			// Send unguessed string to client
-			sprintf(buf,"%s",newCWord);
-			send(sd2, buf, strlen(buf),0);
-			int n = recv(sd2, letterBuf, 1, 0);
-			if(n == 0) {
-				return;
-			}
-
-			//checks if users guess is a valid letter
-			if(letterBuf[0] >= 97 && letterBuf[0] <= 123) {
-				//checks if letter has already been guessed
-				if(usedLetters[letterBuf[0]-97] == 0) {
-					usedLetters[letterBuf[0]-97] = 1;
-					newCWord = checkWord(newCWord, word, letterBuf, guessBuf, &unguessedLet);
-				} else {
-					guessBuf[0]--;
-				}
-			} else {
-				guessBuf[0]--;
-			}
-
-			if(guessBuf[0] == 0 || unguessedLet == 0){
-				gameOver = 1;
-			}
-		}
-		if(guessBuf[0] != 0){
-			// Set guessBuff to 255 to signify win
-			guessBuf[0] = 255;
-		}
-		send(sd2, guessBuf, 1, 0);
-		// Send board one last time
-		sprintf(buf,"%s \n",newCWord);
-		send(sd2, buf, strlen(buf),0);
-		free(newCWord);
-	}
-
-	// Find all occurances of guessed letter in cWord and return new cWord
-	char* checkWord(char *cWord, char *word, char *letterBuf, uint8_t *guessRem,
-		 	uint8_t *unguessedLet) {
-
-		// Create new ptr and copy address to manipulate word
-		char *newCWord = strdup(cWord);
-		cWord = newCWord;
-		int correctGuess = 0;
-		int size = strlen(word);
-		// Replace "_" in cWord where letter is correct
-		for(int i = 0; i < size; i++){
-			if(word[i] == letterBuf[0]) {
-				*newCWord = letterBuf[0];
-				(*unguessedLet)--;
-				correctGuess = 1;
-			}
-			newCWord++;
-		}
-
-		if(!correctGuess) {
-			(*guessRem)--;
-		}
-		return cWord;
-	}
