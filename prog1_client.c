@@ -1,12 +1,17 @@
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+
+
+/**********************************************************************
+*   Socket creation code taken from demo_client.c
+***********************************************************************/
 
 int main( int argc, char **argv) {
 	struct hostent *ptrh; /* pointer to a host table entry */
@@ -71,16 +76,19 @@ int main( int argc, char **argv) {
 	recv(sd, guessesRem, 1, MSG_WAITALL);
 	int lengthWord = guessesRem[0];
 
+	// Keep getting data from server to play guessing game
 	while (guessesRem[0] != 0 && guessesRem[0] != 255) {
 		recv(sd, buf, lengthWord, MSG_WAITALL);
 		printf("Board: %s (%u guesses left)\n", buf, guessesRem[0]);
 		printf("Enter guess: ");
+		// Get letter from user
 		scanf("%s", guess);
 
 		send(sd, guess, 1, 0);
 		recv(sd, guessesRem, 1, MSG_WAITALL);
 		printf("\n");
 	}
+	// Get final board status
 	recv(sd, buf, lengthWord, MSG_WAITALL);
 	printf("Board: %s\n", buf);
 
