@@ -1,13 +1,12 @@
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-
+#include <sys/types.h>
+#include <unistd.h>
 
 /**********************************************************************
 *   Socket creation code taken from demo_client.c
