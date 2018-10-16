@@ -8,6 +8,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+/**********************************************************************
+*   Socket creation code taken from demo_server.c
+***********************************************************************/
+
 #define QLEN 6 /* size of request queue */
 
 // Find all occurances of guessed letter in cWord and return new cWord
@@ -37,6 +41,7 @@ char* checkWord(char *nCWord, char *word, char letterBuf, uint8_t *guessRem,
 	return nCWord;
 }
 
+// Begin to play word guessing game with client
 void playGame(int sd2, char **argv) {
 	char buf[1000]; /* buffer for string the server sends */
 	char letterBuf[1]; /* buffer for users guess */
@@ -52,11 +57,9 @@ void playGame(int sd2, char **argv) {
 	cWord[wordLen] = '\0';
 
 	char* newCWord = strdup(cWord);
-
 	int gameOver = 0;
 	int usedLetters[26] = {0};
-	int n;
-
+	int n; // number of bytes returned from client
 	while(!gameOver) {
 		//Send number of guesses remaining to client
 		send(sd2, guessBuf, 1, 0);
@@ -83,7 +86,7 @@ void playGame(int sd2, char **argv) {
 		} else {
 			guessBuf[0]--;
 		}
-
+		// Check if uclient has guesses remaining and still have unguessed letters
 		if(guessBuf[0] == 0 || unguessedLet == 0){
 			gameOver = 1;
 		}
@@ -170,6 +173,8 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "Error: Accept failed\n");
 			exit(EXIT_FAILURE);
 		}
+		// Make child process to play game with client in order to handle multiple
+		// client requests.
 		int childDesc = fork();
 		if(childDesc == 0) {
 			playGame(sd2, argv);
