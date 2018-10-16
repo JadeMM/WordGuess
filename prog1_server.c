@@ -11,12 +11,9 @@
 #define QLEN 6 /* size of request queue */
 
 // Find all occurances of guessed letter in cWord and return new cWord
-char* checkWord(char *cWord, char *word, char letterBuf, uint8_t *guessRem,
+char* checkWord(char *nCWord, char *word, char letterBuf, uint8_t *guessRem,
 		uint8_t *unguessedLet) {
 
-	// Create new ptr and copy address to manipulate word
-	char *nCWord = strdup(cWord);
-	cWord = nCWord;
 	int correctGuess = 0;
 	int size = strlen(word);
 	// Replace "_" in cWord where letter is correct
@@ -30,10 +27,14 @@ char* checkWord(char *cWord, char *word, char letterBuf, uint8_t *guessRem,
 	}
 	*nCWord = '\0';
 
+	// Move pointer back to beginning of string
+	for(int i = 0; i < size; i++){
+		nCWord--;
+	}
 	if(!correctGuess) {
 		(*guessRem)--;
 	}
-	return cWord;
+	return nCWord;
 }
 
 void playGame(int sd2, char **argv) {
@@ -54,6 +55,7 @@ void playGame(int sd2, char **argv) {
 
 	int gameOver = 0;
 	int usedLetters[26] = {0};
+	int n;
 
 	while(!gameOver) {
 		//Send number of guesses remaining to client
@@ -61,7 +63,9 @@ void playGame(int sd2, char **argv) {
 		// Send unguessed string to client
 		sprintf(buf,"%s",newCWord);
 		send(sd2, buf, strlen(buf),0);
-		int n = recv(sd2, letterBuf, 1, 0);
+		n = recv(sd2, letterBuf, 1, 0);
+
+		// Check if connection was lost
 		if(n == 0) {
 			free(newCWord);
 			return;
